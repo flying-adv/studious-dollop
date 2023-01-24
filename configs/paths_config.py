@@ -1,11 +1,11 @@
 dataset_paths = {
 	#  Face Datasets (FFHQ - train, CelebA-HQ - test)
-	'ffhq': '/content/drive/MyDrive/dataset',
-	'ffhq_val': '/content/drive/MyDrive/dataset',
+	'ffhq': './dataset',
+	'ffhq_val': './dataset',
 
 	#  Cars Dataset (Stanford cars)
-	'cars_train': '/content/drive/MyDrive/cars_train',
-	'cars_val': '/content/drive/MyDrive/cars_train',
+	'cars_train': './cars_train',
+	'cars_val': './cars_train',
 }
 
 model_paths = {

@@ -42,8 +42,6 @@ def main(args):
         edit_direction = torch.load(interfacegan_directions[args.edit_attribute]).to(device)
     else:
         ganspace_pca = torch.load('./editings/ganspace_pca/cars_pca.pt') 
-        # Pose I, Pose II, Cube, Color, Grass
-        # directions = [(0, 0, 5, 2), (0, 0, 5, -2), (16, 3, 6, 25), (22, 9, 11, -8), (41, 9, 11, -18)]
         ganspace_directions = {
             'Pose1':(0, 0, 5, 2),
             'Pose2':(0, 0, 5, -2),
@@ -98,8 +96,7 @@ def main(args):
 
         im_save_path = os.path.join(edit_directory_path, f"{i:05d}.jpg")
         Image.fromarray(np.array(result)).save(im_save_path)
-        x = torch.nn.functional.interpolate(torch.clamp(x, -1., 1.), size=(192,256) , mode='bilinear')
-        Image.fromarray(np.array(tensor2im(x[0]))).save(os.path.join('/content/drive/MyDrive/diffusion_based/HFGI/test_results/cars/real' , f"{i:05d}.jpg"))
+
 
 
 def setup_data_loader(args, opts):

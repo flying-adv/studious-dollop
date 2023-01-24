@@ -29,7 +29,7 @@ class TrainOptions:
         self.parser.add_argument('--id_lambda', default=0.1, type=float, help='ID loss multiplier factor')
         self.parser.add_argument('--l2_lambda', default=1.0, type=float, help='L2 loss multiplier factor')
         self.parser.add_argument('--res_lambda', default=0., type=float, help='L2 loss multiplier factor')  
-        # self.parser.add_argument('--fidelity_lambda', default=0., type=float, help='')  
+        
 
         self.parser.add_argument('--distortion_scale', type=float, default=0.15, help="lambda for delta norm loss")
         self.parser.add_argument('--aug_rate', type=float, default=0.8, help="lambda for delta norm loss")
@@ -41,7 +41,7 @@ class TrainOptions:
                                  help='size of pretrained StyleGAN Generator')
         self.parser.add_argument('--checkpoint_path', default=None, type=str, help='Path to pSp model checkpoint')
 
-        self.parser.add_argument('--max_steps', default=500000, type=int, help='Maximum number of training steps')
+        self.parser.add_argument('--max_steps', default=50000, type=int, help='Maximum number of training steps')
         self.parser.add_argument('--image_interval', default=100, type=int,
                                  help='Interval for logging train images during training')
         self.parser.add_argument('--board_interval', default=100, type=int,
@@ -52,7 +52,7 @@ class TrainOptions:
         self.parser.add_argument('--discriminator_lambda', default=0, type=float, help='Dw loss multiplier')
         self.parser.add_argument('--discriminator_lr', default=2e-5, type=float, help='Dw learning rate')
 
-        #### args for unet ada
+        #### args for D^3A
         self.parser.add_argument('--in_channels', default=6, type=int, help='in_channels for unet')
         self.parser.add_argument('--channels', default=16 , type=int)
         self.parser.add_argument('--channel_multiplier', default=[1,2,1], type=list, help='channel multiplier')

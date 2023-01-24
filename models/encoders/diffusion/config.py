@@ -1,13 +1,6 @@
 from typing import Optional, List
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
-# from tensorfn.config import (
-#     MainConfig,
-#     Config,
-#     Optimizer,
-#     Scheduler,
-#     DataLoader,
-#     Instance,
-# )
+
 
 import models.encoders.diffusion.diffusion
 import models.encoders.diffusion.model

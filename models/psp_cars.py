@@ -29,8 +29,9 @@ class pSp(nn.Module):
         self.grid_transform = transforms.RandomPerspective(distortion_scale=opts.distortion_scale, p=opts.aug_rate)
         self.grid_align = psp_encoders.ResidualAligner(opts) #ADA
         #### for faces ####
-        ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
-        self.__load_latent_avg(ckpt)
+        if self.opts.checkpoint_path:
+            ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
+            self.__load_latent_avg(ckpt)
         #### for faces ####
 
         #self.discriminator = Discriminator(1024)

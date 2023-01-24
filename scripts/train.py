@@ -11,7 +11,6 @@ sys.path.append(".")
 sys.path.append("..")
 
 from options.train_options import TrainOptions
-# from training.coach_prior import Coach
 from training.coach import Coach
 
 
@@ -23,9 +22,9 @@ def main():
  
 
 def create_initial_experiment_dir(opts):
-	# if os.path.exists(opts.exp_dir):
-	# 	raise Exception('{} already exists'.format(opts.exp_dir))
-	os.makedirs(opts.exp_dir , exist_ok=True)
+	if os.path.exists(opts.exp_dir):
+		raise Exception('{} already exists'.format(opts.exp_dir))
+	os.makedirs(opts.exp_dir)
 
 	opts_dict = vars(opts)
 	pprint.pprint(opts_dict)

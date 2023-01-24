@@ -32,8 +32,9 @@ class Coach:
         self.opts.device = self.device
         self.net = pSp(self.opts).to(self.device) # modify it to your basic encoder
         #### for faces ####
-        ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
-        self.net.load_state_dict(ckpt['state_dict'])     
+        if self.opts.checkpoint_path:
+            ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
+            self.net.load_state_dict(ckpt['state_dict'])     
         #### for faces ####
 
         # Initialize loss

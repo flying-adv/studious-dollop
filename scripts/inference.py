@@ -60,13 +60,13 @@ def main(args):
             print('inference finished!')
             break            
         x = batch.to(device).float()
-        tic = time.time()
+        
         # calculate the distortion map
         imgs, _ = generator([latent_codes[i].unsqueeze(0).to(device)],None, input_is_latent=True, randomize_noise=False, return_latents=True)
         res = x -  torch.nn.functional.interpolate(torch.clamp(imgs, -1., 1.), size=(256,256) , mode='bilinear')
 
         # produce initial editing image
-        # edit_latents = editor.apply_interfacegan(latent_codes[i].to(device), interfacegan_direction, factor_range=np.linspace(-3, 3, num=40))  
+        
         if args.edit_attribute == 'inversion':
             img_edit = imgs
             edit_latents = latent_codes[i].unsqueeze(0).to(device)
@@ -77,38 +77,25 @@ def main(args):
 
         # align the distortion map
         img_edit = torch.nn.functional.interpolate(torch.clamp(img_edit, -1., 1.), size=(256,256) , mode='bilinear')
-        
-        # res_align  = net.grid_align(torch.cat((res, img_edit), 1))
+
+        # D^3A
         _ , res_align  = net.grid_align(torch.cat((res, img_edit), 1))
         res_align = res_align + torch.cat((res, img_edit  ), 1) 
-        
-        
-
-        # consultation fusion
+        # Diffusion Encoder
         conditions = net.residue(res_align)
 
         imgs, _ = generator([edit_latents],conditions, input_is_latent=True, randomize_noise=False, return_latents=True)
         if is_cars:
             imgs = imgs[:, :, 64:448, :]
-        # toc = time.time()
-        # print(toc-tic)
+
         # save images
         imgs = torch.nn.functional.interpolate(imgs, size=(256,256) , mode='bilinear')
         result = tensor2im(imgs[0])
-        res_align_1 = tensor2im(res_align[0,:3,:,:])
-        res_align_2 = tensor2im(res_align[0,3:,:,:])
+ 
 
         im_save_path = os.path.join(edit_directory_path, f"{i:05d}.jpg")
-        # res_align_1_path = os.path.join(edit_directory_path, f"{i:05d}_res_align_1.jpg")
-        # res_align_2_path = os.path.join(edit_directory_path, f"{i:05d}_res_align_2.jpg")
-        # input_res_align_1_path = os.path.join(edit_directory_path, f"{i:05d}_input_res_align_1.jpg")
-        # input_res_align_2_path = os.path.join(edit_directory_path, f"{i:05d}_input_res_align_2.jpg")
         Image.fromarray(np.array(result)).save(im_save_path)
-        # Image.fromarray(np.array(res_align_1)).save(res_align_1_path)
-        # Image.fromarray(np.array(res_align_2)).save(res_align_2_path)
-        # Image.fromarray(np.array(tensor2im(res[0]))).save(input_res_align_1_path)
-        # Image.fromarray(np.array(tensor2im(img_edit[0]))).save(input_res_align_2_path)
-        # Image.fromarray(np.array(tensor2im(x[0]))).save(os.path.join('/content/drive/MyDrive/HFGI/test_new_model/real' , f"{i:05d}.jpg"))
+
 
 def setup_data_loader(args, opts):
     dataset_args = data_configs.DATASETS[opts.dataset_type]
