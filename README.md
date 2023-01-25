@@ -24,7 +24,21 @@ We provide pretrained models on Human faces and Cars dataet.
 | Dataset | Checkpoint | Link |
 | :--- | :----------| :---------- | 
 | Human Faces | iteration_14000.pt | [Download](https://drive.google.com/file/d/1TgW9zDs9Zj0xl2Ed-_3IorcN1wmwWa6i/view?usp=share_link) |
-| Cars | iteration_6000.pt | [Download](jfdksjls) |
+| Cars | iteration_6000.pt | [Download](https://drive.google.com/file/d/1qhfCW03m0RZtgJ11qAMv3qaaOrMVtsPi/view?usp=share_link) |
+
+Use gdown to install the checkpoint 
+```
+pip install gdown
+```
+For Human Faces
+```
+gdown --fuzzy "https://drive.google.com/file/d/1TgW9zDs9Zj0xl2Ed-_3IorcN1wmwWa6i/view?usp=share_link"
+```
+For Cars 
+```
+gdown --fuzzy "https://drive.google.com/file/d/1qhfCW03m0RZtgJ11qAMv3qaaOrMVtsPi/view?usp=share_link"
+```
+
 
 ## Inference
 Modify `inference.sh` according to the follwing instructions, and run:   
@@ -61,6 +75,15 @@ bash train.sh
 ```
 
 ## Metrics 
-
+We provide metrics (MSE,LPIPS,SSIM,ID) in `metrics` Directory
+For MSE,LPIPS,SSIM
+```
+python scripts/calc_losses_on_images.py --output_path=/path/to/experiment/inference_results --gt_path=/path/to/test_images
+```
+For ID Loss 
+Download the [CurricularFace](https://drive.google.com/file/d/1f4IwVa2-Bn9vWLwB-bUwm53U_MlvinAj/view?usp=sharing) and [MTCNN](https://drive.google.com/file/d/1tJ7ih-wbCO6zc3JhI_1ZGjmwXKKaPlja/view?usp=sharing)
+```
+python calc_id_loss_parallel.py --output_path=/path/to/experiment/inference_results --gt_path=/path/to/test_images
+```
 
 
