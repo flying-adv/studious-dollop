@@ -18,6 +18,14 @@ For colab and local Ninja is requires.
 We put some images from CelebA-HQ and Standford Cars in `./imgs`.   
 For customized images, it is encouraged to first pre-process (align & crop) them, and then edit with our model.
 
+## Pretrained Models 
+We provide pretrained models on Human faces and Cars dataet.
+
+| Dataset | Checkpoint | Link |
+| :--- | :----------| :---------- | 
+| Human Faces | iteration_14000.pt | [Download](https://drive.google.com/file/d/1TgW9zDs9Zj0xl2Ed-_3IorcN1wmwWa6i/view?usp=share_link) |
+| Cars | iteration_6000.pt | [Download](jfdksjls) |
+
 ## Inference
 Modify `inference.sh` according to the follwing instructions, and run:   
 (Currently we only support GPU for inference.)
@@ -52,10 +60,7 @@ Modify `options/train_options.py` and `train.sh` and run
 bash train.sh
 ```
 
-## Pretrained Models 
-We provide pretrained models on Human faces and Cars dataet.
+## Metrics 
 
-| Dataset | Checkpoint |
-| :--- | :----------
-| Human Faces | iteration_14000.pt |
-| Cars | iteration_6000.pt |
+
+
