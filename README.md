@@ -76,7 +76,10 @@ bash train.sh
 
 ## Metrics 
 We provide metrics (MSE,LPIPS,SSIM,ID) in `metrics` Directory
-For MSE,LPIPS,SSIM
+
+Run the inference script on celebHQ's 1500 first images and calculate the matrix
+
+For MSE, LPIPS, SSIM
 ```
 python scripts/calc_losses_on_images.py --output_path=/path/to/experiment/inference_results --gt_path=/path/to/test_images
 ```
