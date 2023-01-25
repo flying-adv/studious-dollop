@@ -1,1 +1,61 @@
 # D<sup>3</sup>A: A Novel Denoising Diffusion Distortion Alignment Network for StyleGAN Inversion and Image Editing 
+
+## Setup 
+```
+pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
+```
+Ninja Setup 
+```
+wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip
+sudo unzip ninja-linux.zip -d /usr/local/bin/
+sudo update-alternatives --install /usr/bin/ninja ninja /usr/local/bin/ninja 1 --force
+```
+If you are using Pytorch Docker then no need to run Ninja Setup it is already installed in it.
+
+For colab and local Ninja is requires.
+
+## Prepare Images
+We put some images from CelebA-HQ and Standford Cars in `./imgs`.   
+For customized images, it is encouraged to first pre-process (align & crop) them, and then edit with our model.
+
+## Inference
+Modify `inference.sh` according to the follwing instructions, and run:   
+(Currently we only support GPU for inference.)
+
+```
+bash inference.sh
+```
+for human faces 
+
+| Args | Description
+| :--- | :----------
+| --images_dir | the path of images.
+| --n_sample | number of images that you want to infer.
+| --edit_attribute | We provide options of 'inversion', 'age', 'smile', 'eyes', 'lip' and 'beard' in the script.
+| --edit_degree | control the degree of editing (works for 'age' and 'smile').
+
+For Cars
+
+| Args | Description
+| :--- | :----------
+| --images_dir | the path of images.
+| --n_sample | number of images that you want to infer.
+| --edit_attribute | We provide options of 'inversion', 'Pose1', 'Pose2', 'cube', 'color' and 'Grass' in the script.
+
+## Training 
+### Preparation
+1. Download datasets and modify the dataset path in `./configs/paths_config.py` accordingly.
+2. Download some pretrained models and put them in `./pretrained`.
+
+Modify `options/train_options.py` and `train.sh` and run 
+```
+bash train.sh
+```
+
+## Pretrained Models 
+We provide pretrained models on Human faces and Cars dataet.
+
+| Dataset | Checkpoint |
+| :--- | :----------
+| Human Faces | iteration_14000.pt |
+| Cars | iteration_6000.pt |
