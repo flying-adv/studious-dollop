@@ -16,7 +16,7 @@ sys.path.append("..")
 from models.mtcnn.mtcnn import MTCNN
 from models.encoders.model_irse import IR_101
 from configs.paths_config import model_paths
-CIRCULAR_FACE_PATH = "/content/hyperstyle/CurricularFace_Backbone.pth" 
+CIRCULAR_FACE_PATH = "CurricularFace_Backbone.pth" 
 
 
 def chunks(lst, n):
