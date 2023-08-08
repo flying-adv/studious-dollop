@@ -1,3 +1,6 @@
+
+
+
 import argparse
 import torch
 import numpy as np
@@ -33,7 +36,7 @@ def main(args):
     editor = latent_editor.LatentEditor(net.decoder, is_cars)
 
     # initial inversion
-    latent_codes = get_all_latents(net, data_loader, args.n_sample, is_cars=is_cars)
+    latent_codes, style_latents = get_all_latents(net, data_loader, args.n_sample, is_cars=is_cars)
 
     # set the editing operation
     if args.edit_attribute == 'inversion':
@@ -59,11 +62,14 @@ def main(args):
         if args.n_sample is not None and i > args.n_sample:
             print('inference finished!')
             break            
-        x = batch.to(device).float()
+        x,style = batch.to(device).float()
         
         # calculate the distortion map
         imgs, _ = generator([latent_codes[i].unsqueeze(0).to(device)],None, input_is_latent=True, randomize_noise=False, return_latents=True)
         res = x -  torch.nn.functional.interpolate(torch.clamp(imgs, -1., 1.), size=(256,256) , mode='bilinear')
+
+        imgs, _ = generator([style_latents[i].unsqueeze(0).to(device)],None, input_is_latent=True, randomize_noise=False, return_latents=True)
+        res_style = style -  torch.nn.functional.interpolate(torch.clamp(imgs, -1., 1.), size=(256,256) , mode='bilinear')        
 
         # produce initial editing image
         
@@ -135,17 +141,21 @@ def get_latents(net, x, is_cars=False):
 
 def get_all_latents(net, data_loader, n_images=None, is_cars=False):
     all_latents = []
+    all_style_latents = []
     i = 0
     with torch.no_grad():
         for batch in data_loader:
             if n_images is not None and i > n_images:
                 break
-            x = batch
+            x, style = batch
             inputs = x.to(device).float()
+            style = style.to(device).float()
             latents = get_latents(net, inputs, is_cars)
+            latents_style = get_latents(net, style, is_cars)
             all_latents.append(latents)
+            all_style_latents.append(latents_style)
             i += len(latents)
-    return torch.cat(all_latents)
+    return torch.cat(all_latents), torch.cat(all_style_latents)
 
 
 def save_image(img, save_dir, idx):
