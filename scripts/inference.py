@@ -62,19 +62,22 @@ def main(args):
         if args.n_sample is not None and i > args.n_sample:
             print('inference finished!')
             break            
-        x,style = batch.to(device).float()
+        x,style = batch #.to(device).float()
+        x = x.to(device)
+        style = style.to(device)
         
         # calculate the distortion map
         imgs, _ = generator([latent_codes[i].unsqueeze(0).to(device)],None, input_is_latent=True, randomize_noise=False, return_latents=True)
         res = x -  torch.nn.functional.interpolate(torch.clamp(imgs, -1., 1.), size=(256,256) , mode='bilinear')
 
-        imgs, _ = generator([style_latents[i].unsqueeze(0).to(device)],None, input_is_latent=True, randomize_noise=False, return_latents=True)
+        style_edit, _ = generator([style_latents[i].unsqueeze(0).to(device)],None, input_is_latent=True, randomize_noise=False, return_latents=True)
         res_style = style -  torch.nn.functional.interpolate(torch.clamp(imgs, -1., 1.), size=(256,256) , mode='bilinear')        
 
         # produce initial editing image
         
         if args.edit_attribute == 'inversion':
             img_edit = imgs
+            style_edit = style_edit
             edit_latents = latent_codes[i].unsqueeze(0).to(device)
         elif args.edit_attribute == 'age' or args.edit_attribute == 'smile':
             img_edit, edit_latents = editor.apply_interfacegan(latent_codes[i].unsqueeze(0).to(device), edit_direction, factor=args.edit_degree)
@@ -83,10 +86,12 @@ def main(args):
 
         # align the distortion map
         img_edit = torch.nn.functional.interpolate(torch.clamp(img_edit, -1., 1.), size=(256,256) , mode='bilinear')
+        style_edit = torch.nn.functional.interpolate(torch.clamp(style_edit, -1., 1.), size=(256,256) , mode='bilinear')
 
         # D^3A
         _ , res_align  = net.grid_align(torch.cat((res, img_edit), 1))
-        res_align = res_align + torch.cat((res, img_edit  ), 1) 
+        _ , res_align_style  = net.grid_align(torch.cat((res_style, style_edit), 1))
+        res_align = res_align + torch.cat((res, img_edit  ), 1) + torch.cat((res_style, img_edit  ), 1) 
         # Diffusion Encoder
         conditions = net.residue(res_align)
 
