@@ -91,7 +91,7 @@ def main(args):
         # D^3A
         _ , res_align  = net.grid_align(torch.cat((res, img_edit), 1))
         _ , res_align_style  = net.grid_align(torch.cat((res_style, style_edit), 1))
-        res_align = res_align + torch.cat((res, img_edit  ), 1) + torch.cat((res_style, img_edit  ), 1) 
+        res_align = res_align + torch.cat((res, img_edit  ), 1) + 0.5 * torch.cat((res_style, img_edit  ), 1) 
         # Diffusion Encoder
         conditions = net.residue(res_align)
 
