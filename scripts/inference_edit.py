@@ -17,8 +17,11 @@ from PIL import Image
 from editings import latent_editor
 from tqdm import tqdm
 from criteria.clip_loss import CLIPLoss
+import clip 
+import pickle
+from tqdm import tqdm
 
-
+device = 'cuda'
 def toogle_grad(model, flag=True):
     for p in model.parameters():
         p.requires_grad = flag
@@ -26,16 +29,16 @@ def toogle_grad(model, flag=True):
 
 def load_D(path):
     with open(path, 'rb') as f:
-        old_G = pickle.load(f)['G_ema'].to(global_config.device).eval()
+        old_G = pickle.load(f)['D'].to(device).eval()
         old_G = old_G.float()
     return old_G
 
 
-total_iters = 50
+total_iters = 100
 text_prompt = 'red color car'
 text = torch.cat([clip.tokenize(text_prompt)]).cuda()
 clip_losses = CLIPLoss()
-discriminator = load_D(path='')
+discriminator = load_D(path='/content/drive/MyDrive/HFGI/cars_legacy.pkl')
 toogle_grad(discriminator,flag=False)
 bce = torch.nn.BCELoss()
 
@@ -124,27 +127,30 @@ def main(args):
         
         optim = torch.optim.Adam([conditions_delta_0,conditions_delta_1],betas=(0.9, 0.999),lr=0.0001)
         imgs_orig, _ = generator([edit_latents],conditions, input_is_latent=True, randomize_noise=False, return_latents=True)
-        
-        for iters in range(total_iters):
+        class_idx = 0 
+        for iters in tqdm(range(total_iters)):
             with torch.no_grad():
                 conditions_edit = [conditions_delta_0+conditions[0],conditions_delta_1+conditions[1]]
                 imgs_edited,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)
-                disc_real = discriminator(imgs_orig)
-                disc_fake = discriminator(imgs_edited)
-            clip_loss = clip_losses(imgs_edited,text)
+                imgs_edited = torch.nn.functional.interpolate(imgs_edited, size=(512,512) , mode='bilinear')
+                imgs_orig = torch.nn.functional.interpolate(imgs_orig, size=(512,512) , mode='bilinear')
+                disc_real = discriminator(imgs_orig,class_idx)
+                disc_fake = discriminator(imgs_edited,class_idx)
+            clip_loss = clip_losses(imgs_edited,text).mean()
             
 
-            disc_loss = bce(disc_fake,disc_real)
+            disc_loss = bce(torch.sigmoid(disc_fake),torch.sigmoid(disc_real))
             
-            total_loss = clip_loss + disc_loss
+            total_loss = 1.5 * clip_loss + disc_loss
             
             optim.zero_grad()
-            loss.backward()
+            total_loss.backward()
             optim.step()
-        imgs_edited = torch.nn.functional.interpolate(imgs_edited, size=(256,256) , mode='bilinear')
-        result_edited = tensor2im(imgs_edited[0])
+        imgs_edited_,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)            
+        imgs_edited_ = torch.nn.functional.interpolate(imgs_edited_, size=(256,256) , mode='bilinear')
+        result_edited = tensor2im(imgs_edited_[0])
         im_save_path = os.path.join(edit_directory_path_optim, f"{i:05d}.jpg")
-        Image.fromarray(np.array(result)).save(im_save_path)        
+        Image.fromarray(np.array(result_edited)).save(im_save_path)        
         
             
             
