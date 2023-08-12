@@ -34,8 +34,8 @@ def load_D(path):
     return old_G
 
 
-total_iters = 500
-text_prompt = 'red color car'
+total_iters = 150
+text_prompt = 'change the fish color to red'
 text = torch.cat([clip.tokenize(text_prompt)]).cuda()
 clip_losses = CLIPLoss()
 discriminator = load_D(path='/content/drive/MyDrive/HFGI/cars_legacy.pkl')
@@ -130,7 +130,7 @@ def main(args):
         class_idx = 0 
         for iters in tqdm(range(total_iters)):
             # with torch.no_grad():
-            conditions_edit = [conditions_delta_0+conditions[0],conditions_delta_1+conditions[1]]
+            conditions_edit = [1.5 * conditions_delta_0+conditions[0],1.5 *conditions_delta_1+conditions[1]]
             imgs_edited,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)
             imgs_edited = torch.nn.functional.interpolate(imgs_edited, size=(512,512) , mode='bilinear')
             imgs_orig = torch.nn.functional.interpolate(imgs_orig, size=(512,512) , mode='bilinear')
