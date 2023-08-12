@@ -144,7 +144,7 @@ def main(args):
             total_loss = 1.5 * clip_loss + disc_loss
             
             optim.zero_grad()
-            total_loss.backward()
+            total_loss.backward(retain_graph=True)
             optim.step()
         imgs_edited_,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)            
         imgs_edited_ = torch.nn.functional.interpolate(imgs_edited_, size=(256,256) , mode='bilinear')
