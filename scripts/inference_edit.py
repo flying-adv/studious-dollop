@@ -34,7 +34,7 @@ def load_D(path):
     return old_G
 
 
-total_iters = 100
+total_iters = 500
 text_prompt = 'red color car'
 text = torch.cat([clip.tokenize(text_prompt)]).cuda()
 clip_losses = CLIPLoss()
@@ -125,17 +125,17 @@ def main(args):
         conditions_delta_0 = torch.zeros_like(conditions[0],requires_grad=True).to(device)
         conditions_delta_1 = torch.zeros_like(conditions[1],requires_grad=True).to(device)
         
-        optim = torch.optim.Adam([conditions_delta_0,conditions_delta_1],betas=(0.9, 0.999),lr=0.0001)
+        optim = torch.optim.Adam([conditions_delta_0,conditions_delta_1],betas=(0.9, 0.999),lr=0.001)
         imgs_orig, _ = generator([edit_latents],conditions, input_is_latent=True, randomize_noise=False, return_latents=True)
         class_idx = 0 
         for iters in tqdm(range(total_iters)):
-            with torch.no_grad():
-                conditions_edit = [conditions_delta_0+conditions[0],conditions_delta_1+conditions[1]]
-                imgs_edited,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)
-                imgs_edited = torch.nn.functional.interpolate(imgs_edited, size=(512,512) , mode='bilinear')
-                imgs_orig = torch.nn.functional.interpolate(imgs_orig, size=(512,512) , mode='bilinear')
-                disc_real = discriminator(imgs_orig,class_idx)
-                disc_fake = discriminator(imgs_edited,class_idx)
+            # with torch.no_grad():
+            conditions_edit = [conditions_delta_0+conditions[0],conditions_delta_1+conditions[1]]
+            imgs_edited,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)
+            imgs_edited = torch.nn.functional.interpolate(imgs_edited, size=(512,512) , mode='bilinear')
+            imgs_orig = torch.nn.functional.interpolate(imgs_orig, size=(512,512) , mode='bilinear')
+            disc_real = discriminator(imgs_orig,class_idx)
+            disc_fake = discriminator(imgs_edited,class_idx)
             clip_loss = clip_losses(imgs_edited,text).mean()
             
 
