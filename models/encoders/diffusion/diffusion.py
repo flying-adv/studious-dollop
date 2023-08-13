@@ -150,9 +150,9 @@ class GaussianDiffusion(nn.Module):
         return mean + nonzero_mask * torch.exp(0.5 * log_var) * noise
 
     @torch.no_grad()
-    def p_sample_loop(self, model, shape, device, noise_fn=torch.randn):
-        img = noise_fn(shape, device=device)
-
+    def p_sample_loop(self, model, img, device, noise_fn=torch.randn):
+        # img = noise_fn(shape, device=device)
+        shape = img.shape
         for i in reversed(range(self.num_timesteps)):
             img = self.p_sample(
                 model,
@@ -160,5 +160,6 @@ class GaussianDiffusion(nn.Module):
                 torch.full((shape[0],), i, dtype=torch.int64).to(device),
                 noise_fn=noise_fn,
             )
+            img -= img
 
         return img
