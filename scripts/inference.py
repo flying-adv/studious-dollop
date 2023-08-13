@@ -29,7 +29,7 @@ def main(args):
     aligner = net.grid_align
 
     args, data_loader = setup_data_loader(args, opts)
-    args.n_timestep = 10
+    # args.n_timestep = 10
     editor = latent_editor.LatentEditor(net.decoder, is_cars)
 
     # initial inversion
@@ -79,7 +79,7 @@ def main(args):
         img_edit = torch.nn.functional.interpolate(torch.clamp(img_edit, -1., 1.), size=(256,256) , mode='bilinear')
 
         # D^3A
-        _ , res_align  = net.grid_align(torch.cat((res, img_edit), 1))
+        res_align  = net.grid_align(torch.cat((res, img_edit), 1))
         res_align = res_align + torch.cat((res, img_edit  ), 1) 
         # Diffusion Encoder
         conditions = net.residue(res_align)
