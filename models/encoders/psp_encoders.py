@@ -308,9 +308,10 @@ class ResidualAligner(Module):
             (x.shape[0],),
             device=self.device,
         )        
-        loss , x_recon = self.diffusion.p_loss(self.model, x, time)
+        img_noise = self.diffusion.q_sample(x,time)
+        x_recon = self.diffusion.p_sample_loop(self.model, img_noise, self.device)
         # print(loss)
-        return loss , x_recon
+        return x_recon
 
 
 
