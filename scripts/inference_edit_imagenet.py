@@ -4,6 +4,8 @@ import numpy as np
 import sys
 import os
 import time
+import timm 
+import torch.nn.functional as F
 
 sys.path.append(".")
 sys.path.append("..")
@@ -21,6 +23,7 @@ import clip
 import pickle
 import timm
 from tqdm import tqdm
+from pg_modules.discriminator import ProjectedDiscriminator
 
 device = 'cuda'
 def toogle_grad(model, flag=True):
@@ -36,10 +39,14 @@ def load_D(path):
 
 
 total_iters = 150
-text_prompt = 'change the fish color to red'
+text_prompt = 'a person smiling'
 text = torch.cat([clip.tokenize(text_prompt)]).cuda()
 clip_losses = CLIPLoss()
-discriminator = load_D(path='/content/drive/MyDrive/HFGI/cars_legacy.pkl')
+discriminator = load_D(path='/content/studious-dollop/imagenet512.pkl')
+
+# discriminator = ProjectedDiscriminator(*disc_new.init_args, **disc_new.init_kwargs)
+# discriminator.load_state_dict(disc_new.state_dict())
+# del disc_new
 toogle_grad(discriminator,flag=False)
 bce = torch.nn.BCELoss()
 
@@ -88,11 +95,15 @@ def main(args):
             break            
         x = batch.to(device).float()
         
-        cls_target = F.interpolate((x.to(device).to(torch.float32) / 127.5 - 1)[None], 224)
+        cls_target = F.interpolate((x.to(device).to(torch.float32)), 224)
         logits = classifier(cls_target).softmax(1)
         classes = torch.multinomial(logits, 10000, replacement=True).squeeze()
         print(f'Main class: {logits.argmax(1).item()}, confidence: {logits.max().item():.4f}')
-        class_imagenet = logits.argmax(1).item()        
+        class_imagenet = logits.argmax(1).item()  
+        c_samples = np.zeros([10000, 1000], dtype=np.float32)
+        for j, c in enumerate(classes):
+            c_samples[j, c] = 1
+        c_samples = torch.from_numpy(c_samples).to(device)              
         
         # calculate the distortion map
         imgs, _ = generator([latent_codes[i].unsqueeze(0).to(device)],None, input_is_latent=True, randomize_noise=False, return_latents=True)
@@ -134,7 +145,7 @@ def main(args):
         
         optim = torch.optim.Adam([conditions_delta_0,conditions_delta_1],betas=(0.9, 0.999),lr=0.001)
         imgs_orig, _ = generator([edit_latents],conditions, input_is_latent=True, randomize_noise=False, return_latents=True)
-        class_idx = class_imagenet
+        class_idx = c_samples
         for iters in tqdm(range(total_iters)):
             # with torch.no_grad():
             conditions_edit = [1.5 * conditions_delta_0+conditions[0],1.5 *conditions_delta_1+conditions[1]]
