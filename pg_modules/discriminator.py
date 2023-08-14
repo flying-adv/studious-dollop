@@ -192,7 +192,8 @@ class ProjectedDiscriminator(torch.nn.Module):
     def eval(self):
         return self.train(False)
 
-    def forward(self, x, c):
+    def forward(self, x, c):        
+        
         logits = []
 
         for bb_name, feat in self.feature_networks.items():
@@ -204,7 +205,7 @@ class ProjectedDiscriminator(torch.nn.Module):
             x_aug = x_aug.add(1).div(2)
 
             # apply F-specific normalization
-            x_n = Normalize(feat.normstats['mean'], feat.normstats['std'])(x_aug)
+            x_n = Normalize([0.5, 0.5, 0.5],[0.5, 0.5, 0.5])(x_aug)
 
             # upsample if smaller, downsample if larger + VIT
             if self.interp224 or bb_name in VITS:
