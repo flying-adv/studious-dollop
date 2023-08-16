@@ -97,10 +97,10 @@ def main(args):
         
         cls_target = F.interpolate((x.to(device).to(torch.float32)), 224)
         logits = classifier(cls_target).softmax(1)
-        classes = torch.multinomial(logits, 10000, replacement=True).squeeze()
+        classes = torch.multinomial(logits, 8, replacement=True).squeeze()
         print(f'Main class: {logits.argmax(1).item()}, confidence: {logits.max().item():.4f}')
         class_imagenet = logits.argmax(1).item()  
-        c_samples = np.zeros([10000, 1000], dtype=np.float32)
+        c_samples = np.zeros([8, 1000], dtype=np.float32)
         for j, c in enumerate(classes):
             c_samples[j, c] = 1
         c_samples = torch.from_numpy(c_samples).to(device)              
@@ -156,10 +156,11 @@ def main(args):
             disc_fake = discriminator(imgs_edited,class_idx)
             clip_loss = clip_losses(imgs_edited,text).mean()
             
-
-            disc_loss = bce(torch.sigmoid(disc_fake),torch.sigmoid(disc_real))
+            disc_loss = 0
+            for i in range(len(disc_fake)):
+                disc_loss += bce(torch.sigmoid(disc_fake[i]),torch.sigmoid(disc_real[i]))
             
-            total_loss = 1.5 * clip_loss + disc_loss
+            total_loss = 1.5 * clip_loss + 50 * disc_loss
             
             optim.zero_grad()
             total_loss.backward(retain_graph=True)
