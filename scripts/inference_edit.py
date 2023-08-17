@@ -35,10 +35,10 @@ def load_D(path):
 
 
 total_iters = 150
-text_prompt = 'change the fish color to red'
+text_prompt = 'smiling person'
 text = torch.cat([clip.tokenize(text_prompt)]).cuda()
 clip_losses = CLIPLoss()
-discriminator = load_D(path='/content/drive/MyDrive/HFGI/cars_legacy.pkl')
+discriminator = load_D(path='/content/drive/MyDrive/weights/ffhq.pkl')
 toogle_grad(discriminator,flag=False)
 bce = torch.nn.BCELoss()
 
@@ -132,16 +132,16 @@ def main(args):
             # with torch.no_grad():
             conditions_edit = [1.5 * conditions_delta_0+conditions[0],1.5 *conditions_delta_1+conditions[1]]
             imgs_edited,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)
-            imgs_edited = torch.nn.functional.interpolate(imgs_edited, size=(512,512) , mode='bilinear')
-            imgs_orig = torch.nn.functional.interpolate(imgs_orig, size=(512,512) , mode='bilinear')
+            imgs_edited = torch.nn.functional.interpolate(imgs_edited, size=(1024,1024) , mode='bilinear')
+            imgs_orig = torch.nn.functional.interpolate(imgs_orig, size=(1024,1024) , mode='bilinear')
             disc_real = discriminator(imgs_orig,class_idx)
             disc_fake = discriminator(imgs_edited,class_idx)
-            clip_loss = clip_losses(imgs_edited,text).mean()
+            clip_loss = clip_losses(torch.nn.functional.interpolate(imgs_edited,size=(512,512) , mode='bilinear'),text).mean()
             
 
             disc_loss = bce(torch.sigmoid(disc_fake),torch.sigmoid(disc_real))
             
-            total_loss = 1.5 * clip_loss + disc_loss
+            total_loss = 1.5 * clip_loss + 100 * disc_loss
             
             optim.zero_grad()
             total_loss.backward(retain_graph=True)
