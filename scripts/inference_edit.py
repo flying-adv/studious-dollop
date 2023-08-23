@@ -34,8 +34,8 @@ def load_D(path):
     return old_G
 
 
-total_iters = 150
-text_prompt = 'smiling person'
+total_iters = 300
+text_prompt = 'a person is smiling'
 text = torch.cat([clip.tokenize(text_prompt)]).cuda()
 clip_losses = CLIPLoss()
 discriminator = load_D(path='/content/drive/MyDrive/weights/ffhq.pkl')
@@ -122,26 +122,28 @@ def main(args):
         im_save_path = os.path.join(edit_directory_path, f"{i:05d}.jpg")
         Image.fromarray(np.array(result)).save(im_save_path)
         
-        conditions_delta_0 = torch.zeros_like(conditions[0],requires_grad=True).to(device)
-        conditions_delta_1 = torch.zeros_like(conditions[1],requires_grad=True).to(device)
+        conditions_delta_0 = (torch.randn_like(conditions[0]).to(device) * 0.001).requires_grad_(True)
+        conditions_delta_1 = (torch.randn_like(conditions[1]).to(device) * 0.001).requires_grad_(True)
         
         optim = torch.optim.Adam([conditions_delta_0,conditions_delta_1],betas=(0.9, 0.999),lr=0.001)
-        imgs_orig, _ = generator([edit_latents],conditions, input_is_latent=True, randomize_noise=False, return_latents=True)
+        # imgs_orig, _ = x #generator([edit_latents],conditions, input_is_latent=True, randomize_noise=False, return_latents=True)
+        imgs_orig = x
         class_idx = 0 
         for iters in tqdm(range(total_iters)):
-            # with torch.no_grad():
             conditions_edit = [1.5 * conditions_delta_0+conditions[0],1.5 *conditions_delta_1+conditions[1]]
+            # with torch.no_grad():
             imgs_edited,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)
             imgs_edited = torch.nn.functional.interpolate(imgs_edited, size=(1024,1024) , mode='bilinear')
             imgs_orig = torch.nn.functional.interpolate(imgs_orig, size=(1024,1024) , mode='bilinear')
-            disc_real = discriminator(imgs_orig,class_idx)
-            disc_fake = discriminator(imgs_edited,class_idx)
+            with torch.no_grad():
+                disc_real = discriminator(imgs_orig,class_idx)
+                disc_fake = discriminator(imgs_edited,class_idx)
             clip_loss = clip_losses(torch.nn.functional.interpolate(imgs_edited,size=(512,512) , mode='bilinear'),text).mean()
             
-
+            print(conditions_delta_0.mean().item())
             disc_loss = bce(torch.sigmoid(disc_fake),torch.sigmoid(disc_real))
             
-            total_loss = 1.5 * clip_loss + 100 * disc_loss
+            total_loss = 1.5 * clip_loss + 200 * disc_loss
             
             optim.zero_grad()
             total_loss.backward(retain_graph=True)
