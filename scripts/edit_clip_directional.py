@@ -28,6 +28,7 @@ import lpips
 # with dnnlib.util.open_url(url) as f:
 #     vgg16 = torch.jit.load(f).eval().to('cuda')
 
+
 lpips_loss = LPIPS(net_type='vgg').to('cuda').eval()
 
 device = 'cuda'
@@ -44,7 +45,7 @@ def load_D(path):
 
 
 total_iters = 300
-text_prompt = 'convert it in cartoon style'
+text_prompt = 'convert it in pixar style cartoon'
 text_new = 'a photo'
 # text_new = torch.cat([clip.tokenize(text_new)]).cuda()
 # text = torch.cat([clip.tokenize(text_prompt)]).cuda()
@@ -133,15 +134,15 @@ def main(args):
         im_save_path = os.path.join(edit_directory_path, f"{i:05d}.jpg")
         Image.fromarray(np.array(result)).save(im_save_path)
         
-        conditions_delta_0 = (torch.randn_like(conditions[0]).to(device) * 0.001).requires_grad_(True)
-        conditions_delta_1 = (torch.randn_like(conditions[1]).to(device) * 0.001).requires_grad_(True)
-        
-        optim = torch.optim.Adam([conditions_delta_0,conditions_delta_1],betas=(0.9, 0.999),lr=0.001)
+        # conditions_delta_0 = (torch.zeros_like(conditions[0]).to(device) ).requires_grad_(True)
+        # conditions_delta_1 = (torch.zeros_like(conditions[1]).to(device) ).requires_grad_(True)
+        generator.requires_grad_(True)
+        optim = torch.optim.Adam(generator.parameters(),betas=(0.9, 0.999),lr=0.001)
         # imgs_orig, _ = x #generator([edit_latents],conditions, input_is_latent=True, randomize_noise=False, return_latents=True)
         imgs_orig = x
         class_idx = 0 
         for iters in tqdm(range(total_iters)):
-            conditions_edit = [1.5 * conditions_delta_0+conditions[0],1.5 *conditions_delta_1+conditions[1]]
+            conditions_edit = conditions #[2.5 * conditions_delta_0+conditions[0],2.5 *conditions_delta_1+conditions[1]]
             # with torch.no_grad():
             imgs_edited,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)
             imgs_edited = torch.nn.functional.interpolate(imgs_edited, size=(1024,1024) , mode='bilinear')
@@ -149,10 +150,10 @@ def main(args):
             with torch.no_grad():
                 disc_real = discriminator(imgs_orig,class_idx)
                 disc_fake = discriminator(imgs_edited,class_idx)
-            # clip_loss = clip_losses(torch.nn.functional.interpolate(imgs_edited,size=(512,512) , mode='bilinear'),text).mean()
+            # clip_loss = clip_losses(torch.nn.functional.interpolate(imgs_edited,size=(512,512) , mode='bilinear'),text).mean()          
             clip_loss_ = clip_losses(imgs_orig,text_new,imgs_edited,text_prompt)
             
-            print(conditions_delta_0.mean().item())
+            # print(conditions_delta_0.mean().item())
             disc_loss = bce(torch.sigmoid(disc_fake),torch.sigmoid(disc_real))
             # fake_vgg = vgg16(disc_fake, resize_images=True, return_lpips=True)
             # real_vgg = vgg16(disc_real, resize_images=True, return_lpips=True)
@@ -161,7 +162,7 @@ def main(args):
             perceptual = lpips_loss(torch.nn.functional.interpolate(imgs_edited,size=(224,224)),
                                     torch.nn.functional.interpolate(imgs_orig,size=(224,224)))
             # print(clip_loss_)
-            total_loss = 10 * clip_loss_ + 200 * disc_loss + perceptual * 1.2
+            total_loss = clip_loss_ + 200 * disc_loss #+ perceptual * 1.2
             
             optim.zero_grad()
             total_loss.backward(retain_graph=True)
