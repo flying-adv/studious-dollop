@@ -45,7 +45,7 @@ def load_D(path):
 
 
 total_iters = 300
-text_prompt = 'convert it in pixar style cartoon'
+text_prompt = 'a photo in van de gogh style painting'
 text_new = 'a photo'
 # text_new = torch.cat([clip.tokenize(text_new)]).cuda()
 # text = torch.cat([clip.tokenize(text_prompt)]).cuda()
@@ -137,7 +137,8 @@ def main(args):
         # conditions_delta_0 = (torch.zeros_like(conditions[0]).to(device) ).requires_grad_(True)
         # conditions_delta_1 = (torch.zeros_like(conditions[1]).to(device) ).requires_grad_(True)
         generator.requires_grad_(True)
-        optim = torch.optim.Adam(generator.parameters(),betas=(0.9, 0.999),lr=0.001)
+        optim = torch.optim.Adam(generator.parameters(),betas=(0.9, 0.999),lr=0.01)
+        scheduler = torch.optim.lr_scheduler.LinearLR(optim, start_factor=0.5, total_iters=50)
         # imgs_orig, _ = x #generator([edit_latents],conditions, input_is_latent=True, randomize_noise=False, return_latents=True)
         imgs_orig = x
         class_idx = 0 
@@ -162,11 +163,12 @@ def main(args):
             perceptual = lpips_loss(torch.nn.functional.interpolate(imgs_edited,size=(224,224)),
                                     torch.nn.functional.interpolate(imgs_orig,size=(224,224)))
             # print(clip_loss_)
-            total_loss = clip_loss_ + 200 * disc_loss #+ perceptual * 1.2
+            total_loss = 100 * clip_loss_ + disc_loss #+ perceptual * 1.2
             
             optim.zero_grad()
             total_loss.backward(retain_graph=True)
             optim.step()
+            scheduler.step()
         imgs_edited_,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)            
         imgs_edited_ = torch.nn.functional.interpolate(imgs_edited_, size=(256,256) , mode='bilinear')
         result_edited = tensor2im(imgs_edited_[0])
