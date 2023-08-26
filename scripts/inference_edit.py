@@ -17,9 +17,12 @@ from PIL import Image
 from editings import latent_editor
 from tqdm import tqdm
 from criteria.clip_loss import CLIPLoss
+from criteria.lpips.lpips import LPIPS
 import clip 
 import pickle
 from tqdm import tqdm
+
+lpips_loss = LPIPS(net_type='vgg').to('cuda').eval()
 
 device = 'cuda'
 def toogle_grad(model, flag=True):
@@ -126,6 +129,7 @@ def main(args):
         conditions_delta_1 = (torch.randn_like(conditions[1]).to(device) * 0.001).requires_grad_(True)
         
         optim = torch.optim.Adam([conditions_delta_0,conditions_delta_1],betas=(0.9, 0.999),lr=0.001)
+        scheduler = torch.optim.lr_scheduler.LinearLR(optim, start_factor=0.5, total_iters=10)
         # imgs_orig, _ = x #generator([edit_latents],conditions, input_is_latent=True, randomize_noise=False, return_latents=True)
         imgs_orig = x
         class_idx = 0 
@@ -142,12 +146,16 @@ def main(args):
             
             print(conditions_delta_0.mean().item())
             disc_loss = bce(torch.sigmoid(disc_fake),torch.sigmoid(disc_real))
+
+            perceptual = lpips_loss(torch.nn.functional.interpolate(imgs_edited,size=(224,224)),
+                                    torch.nn.functional.interpolate(imgs_orig,size=(224,224)))        
             
-            total_loss = 1.5 * clip_loss + 200 * disc_loss
+            total_loss = 1.5 * clip_loss + 200 * disc_loss + perceptual
             
             optim.zero_grad()
             total_loss.backward(retain_graph=True)
             optim.step()
+            scheduler.step()
         imgs_edited_,_ = generator([edit_latents],conditions_edit, input_is_latent=True, randomize_noise=False, return_latents=True)            
         imgs_edited_ = torch.nn.functional.interpolate(imgs_edited_, size=(256,256) , mode='bilinear')
         result_edited = tensor2im(imgs_edited_[0])
