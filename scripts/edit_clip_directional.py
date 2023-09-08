@@ -45,12 +45,12 @@ def load_D(path):
 
 
 total_iters = 300
-text_prompt = 'a photo in van de gogh style painting'
-text_new = 'a photo'
+text_prompt = 'pixar'
+text_new = 'a face'
 # text_new = torch.cat([clip.tokenize(text_new)]).cuda()
 # text = torch.cat([clip.tokenize(text_prompt)]).cuda()
 clip_losses = DirectionalCLIPLOSS('cuda') #CLIPLoss()
-discriminator = load_D(path='/content/drive/MyDrive/weights/ffhq.pkl')
+discriminator = load_D(path='/content/studious-dollop/ffhq.pkl')
 toogle_grad(discriminator,flag=False)
 bce = torch.nn.BCELoss()
 
@@ -163,7 +163,7 @@ def main(args):
             perceptual = lpips_loss(torch.nn.functional.interpolate(imgs_edited,size=(224,224)),
                                     torch.nn.functional.interpolate(imgs_orig,size=(224,224)))
             # print(clip_loss_)
-            total_loss = 100 * clip_loss_ + disc_loss #+ perceptual * 1.2
+            total_loss = 100 * clip_loss_ + disc_loss + perceptual * 100
             
             optim.zero_grad()
             total_loss.backward(retain_graph=True)
