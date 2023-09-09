@@ -38,10 +38,10 @@ def load_D(path):
 
 
 total_iters = 300
-text_prompt = 'a person is smiling'
+text_prompt = 'closed eyes'
 text = torch.cat([clip.tokenize(text_prompt)]).cuda()
 clip_losses = CLIPLoss()
-discriminator = load_D(path='/content/drive/MyDrive/weights/ffhq.pkl')
+discriminator = load_D(path='/content/studious-dollop/ffhq.pkl')
 toogle_grad(discriminator,flag=False)
 bce = torch.nn.BCELoss()
 
@@ -150,7 +150,7 @@ def main(args):
             perceptual = lpips_loss(torch.nn.functional.interpolate(imgs_edited,size=(224,224)),
                                     torch.nn.functional.interpolate(imgs_orig,size=(224,224)))        
             
-            total_loss = 1.5 * clip_loss + 200 * disc_loss + perceptual
+            total_loss = 100 * clip_loss +  disc_loss + perceptual * 200
             
             optim.zero_grad()
             total_loss.backward(retain_graph=True)
